@@ -104,6 +104,7 @@ export const AuthProvider = ({ children }) => {
         loginAsAdmin,
         loginAsUser,
         switchRole,
+        isAdmin: user?.role === "ORG_ADMIN" || user?.role === "SUPER_ADMIN",
         isSuperAdmin: user?.role === "SUPER_ADMIN",
         isOrgAdmin: user?.role === "ORG_ADMIN",
         isManager: user?.role === "MANAGER" || user?.role === "ORG_ADMIN" || user?.role === "SUPER_ADMIN",

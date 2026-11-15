@@ -6,13 +6,24 @@ import { AuthModal } from "./components/Auth/AuthModal";
 import { ChatInterface } from "./components/Chat/ChatInterface";
 import { AgentDirectory } from "./components/Agents/AgentDirectory";
 import { DocumentManager } from "./components/Knowledge/DocumentManager";
+import { ApprovalsCenter } from "./components/Approvals/ApprovalsCenter";
 import { WorkflowBuilder } from "./components/Workflows/WorkflowBuilder";
 import { IntegrationsManager } from "./components/Integrations/IntegrationsManager";
 import { AdminDashboard } from "./components/Admin/AdminDashboard";
 
 const MainAppContent = () => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("chat");
-  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(!user);
+
+  // If not logged in, show auth modal fullscreen
+  if (!user) {
+    return (
+      <div style={{ minHeight: "100vh", background: "var(--bg-primary)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <AuthModal isOpen={true} onClose={() => {}} />
+      </div>
+    );
+  }
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "var(--bg-primary)", color: "var(--text-primary)" }}>
@@ -25,6 +36,7 @@ const MainAppContent = () => {
           {activeTab === "chat" && <ChatInterface />}
           {activeTab === "agents" && <AgentDirectory />}
           {activeTab === "knowledge" && <DocumentManager />}
+          {activeTab === "approvals" && <ApprovalsCenter />}
           {activeTab === "workflows" && <WorkflowBuilder />}
           {activeTab === "integrations" && <IntegrationsManager />}
           {activeTab === "admin" && <AdminDashboard />}

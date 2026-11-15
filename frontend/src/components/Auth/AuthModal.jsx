@@ -3,7 +3,7 @@ import { useAuth } from "../../context/AuthContext";
 import { X, Lock, Mail, User as UserIcon, Shield, Sparkles } from "lucide-react";
 
 export const AuthModal = ({ isOpen, onClose }) => {
-  const { login, register, loginAsAdmin, loginAsUser } = useAuth();
+  const { login, register, switchRole, user } = useAuth();
   const [isRegister, setIsRegister] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -28,10 +28,9 @@ export const AuthModal = ({ isOpen, onClose }) => {
     }
   };
 
-  const handleQuickDemo = async (type) => {
+  const handleQuickDemo = (role) => {
     try {
-      if (type === "admin") await loginAsAdmin();
-      else await loginAsUser();
+      switchRole(role);
       onClose();
     } catch (err) {
       setError("Demo login failed");
@@ -62,14 +61,16 @@ export const AuthModal = ({ isOpen, onClose }) => {
         position: 'relative',
         boxShadow: 'var(--shadow-md)'
       }}>
-        <button 
-          onClick={onClose} 
-          style={{ position: 'absolute', top: '1.25rem', right: '1.25rem', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
-        >
-          <X size={20} />
-        </button>
+        {user && (
+          <button 
+            onClick={onClose} 
+            style={{ position: 'absolute', top: '1.25rem', right: '1.25rem', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+          >
+            <X size={20} />
+          </button>
+        )}
 
-        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+        <div style={{ textAlign: 'center', marginBottom: '1.25rem' }}>
           <div style={{
             width: '48px',
             height: '48px',
@@ -102,12 +103,18 @@ export const AuthModal = ({ isOpen, onClose }) => {
           <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--accent-primary)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem' }}>
             <Sparkles size={15} /> Instant Demo One-Click Sign In
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-            <button onClick={() => handleQuickDemo('admin')} className="btn-secondary" style={{ fontSize: '0.8rem', justifyContent: 'center' }}>
-              👑 Admin Demo
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.4rem' }}>
+            <button type="button" onClick={() => handleQuickDemo('SUPER_ADMIN')} className="btn-secondary" style={{ fontSize: '0.75rem', justifyContent: 'center', padding: '0.35rem' }}>
+              ⚡ Super Admin
             </button>
-            <button onClick={() => handleQuickDemo('user')} className="btn-secondary" style={{ fontSize: '0.8rem', justifyContent: 'center' }}>
-              👤 User Demo
+            <button type="button" onClick={() => handleQuickDemo('ORG_ADMIN')} className="btn-secondary" style={{ fontSize: '0.75rem', justifyContent: 'center', padding: '0.35rem' }}>
+              🛡️ Org Admin
+            </button>
+            <button type="button" onClick={() => handleQuickDemo('MANAGER')} className="btn-secondary" style={{ fontSize: '0.75rem', justifyContent: 'center', padding: '0.35rem' }}>
+              👔 Manager
+            </button>
+            <button type="button" onClick={() => handleQuickDemo('EMPLOYEE')} className="btn-secondary" style={{ fontSize: '0.75rem', justifyContent: 'center', padding: '0.35rem' }}>
+              👤 Employee
             </button>
           </div>
         </div>

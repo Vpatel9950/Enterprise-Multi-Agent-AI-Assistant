@@ -115,8 +115,12 @@ export const DocumentManager = () => {
             {searchResults.map((match, idx) => (
               <div key={idx} style={{ padding: '0.75rem', background: 'var(--bg-primary)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
-                  <span style={{ fontWeight: 600, fontSize: '0.85rem' }}>{match.filename}</span>
-                  <span className="badge badge-emerald">Similarity Score: {intVal(match.similarity_score * 100)}%</span>
+                  <span style={{ fontWeight: 600, fontSize: '0.85rem' }}>
+                    {match.source_name || match.filename} — <em style={{ fontWeight: 400, color: 'var(--text-secondary)' }}>{match.section}</em>
+                  </span>
+                  <span className="badge badge-emerald">
+                    Score: {intVal((match.relevance_score || match.similarity_score || 0) * 100)}%
+                  </span>
                 </div>
                 <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>"{match.snippet}"</p>
               </div>
@@ -145,14 +149,20 @@ export const DocumentManager = () => {
                 <tr key={doc.id} style={{ borderBottom: '1px solid var(--border-color)', fontSize: '0.88rem' }}>
                   <td style={{ padding: '0.75rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <FileText size={16} color="var(--accent-primary)" />
-                    {doc.filename}
+                    {doc.fileName || doc.filename || doc.file_name}
                   </td>
                   <td style={{ padding: '0.75rem' }}>
-                    <span className="badge badge-cyan" style={{ fontSize: '0.7rem' }}>{doc.category}</span>
+                    <span className="badge badge-cyan" style={{ fontSize: '0.7rem' }}>
+                      {doc.classification || doc.category || 'INTERNAL'}
+                    </span>
                   </td>
-                  <td style={{ padding: '0.75rem' }}>{doc.word_count} words</td>
-                  <td style={{ padding: '0.75rem' }}>{doc.chunk_count} chunks</td>
-                  <td style={{ padding: '0.75rem', color: 'var(--text-secondary)' }}>{doc.uploaded_by}</td>
+                  <td style={{ padding: '0.75rem' }}>
+                    {Math.round((doc.fileSize || 0) / 100)} words
+                  </td>
+                  <td style={{ padding: '0.75rem' }}>{doc.chunkCount || doc.chunk_count || '—'} chunks</td>
+                  <td style={{ padding: '0.75rem', color: 'var(--text-secondary)' }}>
+                    {doc.uploadedByName || doc.uploaded_by || 'System'}
+                  </td>
                   {isAdmin && (
                     <td style={{ padding: '0.75rem', textAlign: 'right' }}>
                       <button onClick={() => handleDeleteDoc(doc.id)} className="btn-danger" style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem' }}>

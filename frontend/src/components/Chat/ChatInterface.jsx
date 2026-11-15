@@ -1,9 +1,42 @@
 import React, { useState, useEffect, useRef } from "react";
+import ReactMarkdown from "react-markdown";
 import { api } from "../../services/api";
+
+// Separate component for collapsible agent traces (Rules of Hooks compliance)
+const AgentTraces = ({ traces }) => {
+  const [open, setOpen] = useState(false);
+  if (!traces || traces.length === 0) return null;
+  return (
+    <div style={{ marginTop: '0.85rem', borderRadius: '8px', overflow: 'hidden', border: '1px solid rgba(6, 182, 212, 0.25)', fontSize: '0.78rem' }}>
+      <div
+        onClick={() => setOpen(!open)}
+        style={{ padding: '0.5rem 0.75rem', background: 'rgba(6, 182, 212, 0.08)', cursor: 'pointer', fontWeight: 700, color: 'var(--accent-secondary)', display: 'flex', alignItems: 'center', gap: '0.35rem', userSelect: 'none' }}
+      >
+        <span>⚡ Agent Execution Traces ({traces.length} steps)</span>
+        <span style={{ marginLeft: 'auto', fontSize: '0.7rem' }}>{open ? '▲ Hide' : '▼ Show'}</span>
+      </div>
+      {open && (
+        <div style={{ padding: '0.5rem 0.75rem', background: 'rgba(6, 182, 212, 0.04)' }}>
+          {traces.map((tr, idx) => (
+            <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
+              <span style={{ color: 'var(--accent-success)', flexShrink: 0 }}>✓</span>
+              <span>
+                <strong>{tr.agent_name || tr.agentName}</strong>: {tr.action}
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginLeft: '0.4rem' }}>
+                  ({tr.duration_ms || tr.durationMs}ms)
+                </span>
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+import { useAuth } from "../../context/AuthContext";
 import { 
   Send, 
   Plus, 
-  Trash2, 
   Sparkles, 
   FileText, 
   Download, 
@@ -12,100 +45,73 @@ import {
   Cpu, 
   Zap, 
   Layers, 
-  Info,
-  ThumbsUp,
-  ThumbsDown,
-  CheckCircle,
-  HelpCircle
+  ShieldAlert,
+  CheckCircle2,
+  Clock,
+  ExternalLink,
+  ChevronRight
 } from "lucide-react";
 
 export const ChatInterface = () => {
+  const { user, isManager, isOrgAdmin } = useAuth();
   const [conversations, setConversations] = useState([]);
   const [activeConvId, setActiveConvId] = useState(null);
   const [messages, setMessages] = useState([]);
-  const [agents, setAgents] = useState([]);
-  const [selectedAgentId, setSelectedAgentId] = useState(""); // empty string = Auto Router Supervisor
+  const [selectedAgentCode, setSelectedAgentCode] = useState("orchestrator");
   const [inputQuery, setInputQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [showRAGModal, setShowRAGModal] = useState(null);
   const messagesEndRef = useRef(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  const agentsList = [
+    { code: "orchestrator", name: "⚡ Auto Router (Supervisor)", desc: "Analyzes intent & plans multi-agent swarm DAG" },
+    { code: "rag_agent", name: "📚 Knowledge & RAG Agent", desc: "Searches company policies with citations" },
+    { code: "hr_agent", name: "🏢 HR & Employee Agent", desc: "Benefits, PTO, leave allowance & handbook" },
+    { code: "finance_agent", name: "💳 Finance & Budget Agent", desc: "Department budgets, spend & variance" },
+    { code: "dev_agent", name: "🛠️ Developer & Architecture Agent", desc: "API specs, cloud infrastructure & code debug" },
+    { code: "research_agent", name: "🔬 Research & Synthesis Agent", desc: "Multi-document executive briefing" },
+    { code: "db_agent", name: "🗄️ Database Query Agent", desc: "Controlled read-only MongoDB aggregations" },
+    { code: "action_agent", name: "⚡ Action Agent (HITL Gate)", desc: "State-modifying operations with human review" }
+  ];
 
   useEffect(() => {
-    loadAgents();
     loadConversations();
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     if (activeConvId) {
-      loadConversationDetails(activeConvId);
+      loadMessages(activeConvId);
     }
   }, [activeConvId]);
 
   useEffect(() => {
-    scrollToBottom();
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
-
-  const loadAgents = async () => {
-    try {
-      const data = await api.getAgents();
-      setAgents(data.filter((a) => a.is_active));
-    } catch (err) {
-      console.error("Failed to load agents", err);
-    }
-  };
 
   const loadConversations = async () => {
     try {
       const data = await api.getConversations();
       setConversations(data);
       if (data.length > 0 && !activeConvId) {
-        setActiveConvId(data[0].id);
+        setActiveConvId(data[0].id || data[0]._id);
       }
     } catch (err) {
       console.error("Failed to load conversations", err);
     }
   };
 
-  const loadConversationDetails = async (id) => {
+  const loadMessages = async (convId) => {
     try {
-      const data = await api.getConversation(id);
-      setMessages(data.messages || []);
+      const msgs = await api.getConversationMessages(convId);
+      setMessages(msgs);
     } catch (err) {
-      console.error("Failed to load conversation details", err);
+      console.error("Failed to load conversation messages", err);
     }
   };
 
-  const handleNewChat = async () => {
-    try {
-      const newConv = await api.createConversation(
-        "New Conversation", 
-        selectedAgentId ? parseInt(selectedAgentId) : null
-      );
-      setConversations([newConv, ...conversations]);
-      setActiveConvId(newConv.id);
-      setMessages(newConv.messages || []);
-    } catch (err) {
-      console.error("Failed to create new chat", err);
-    }
-  };
-
-  const handleDeleteChat = async (e, id) => {
-    e.stopPropagation();
-    try {
-      await api.deleteConversation(id);
-      const remaining = conversations.filter((c) => c.id !== id);
-      setConversations(remaining);
-      if (activeConvId === id) {
-        setActiveConvId(remaining.length > 0 ? remaining[0].id : null);
-        if (remaining.length === 0) setMessages([]);
-      }
-    } catch (err) {
-      console.error("Failed to delete conversation", err);
-    }
+  const handleNewChat = () => {
+    setActiveConvId(null);
+    setMessages([]);
   };
 
   const handleSendMessage = async (e) => {
@@ -116,64 +122,72 @@ export const ChatInterface = () => {
     setInputQuery("");
     setLoading(true);
 
-    // Optimistic user message rendering
+    // Optimistic user bubble
     const tempUserMsg = {
-      id: Date.now(),
-      sender_type: "user",
-      sender_name: "You",
+      id: "temp-" + Date.now(),
+      senderType: "USER",
+      senderName: user?.fullName || "Employee",
       content: userText,
-      created_at: new Date().toISOString(),
+      createdAt: new Date().toISOString()
     };
     setMessages((prev) => [...prev, tempUserMsg]);
 
     try {
-      const resMessages = await api.sendMessage(
+      const res = await api.sendMessage(
         activeConvId,
-        selectedAgentId ? parseInt(selectedAgentId) : null,
+        selectedAgentCode === "orchestrator" ? null : selectedAgentCode,
         userText
       );
 
-      if (resMessages && resMessages.length > 0) {
-        // If this was a new conversation created automatically
-        const newConvId = resMessages[0].conversation_id;
-        if (activeConvId !== newConvId) {
-          setActiveConvId(newConvId);
+      if (res) {
+        if (!activeConvId || activeConvId !== res.conversation_id) {
+          setActiveConvId(res.conversation_id);
           loadConversations();
-        } else {
-          loadConversationDetails(activeConvId);
         }
+
+        const agentMsg = {
+          id: "agent-" + Date.now(),
+          senderType: "AGENT",
+          senderName: res.assigned_agent || "Orchestrator Agent",
+          content: res.response,
+          citations: res.citations || [],
+          agentTraces: res.agent_traces || [],
+          approval_required: res.approval_required,
+          approval_id: res.approval_id,
+          durationMs: res.duration_ms,
+          tokensUsed: res.tokens_used,
+          createdAt: new Date().toISOString()
+        };
+        setMessages((prev) => [...prev, agentMsg]);
       }
     } catch (err) {
-      console.error("Error sending message:", err);
+      console.error("Failed to send message", err);
+      const errorMsg = {
+        id: "err-" + Date.now(),
+        senderType: "SYSTEM",
+        senderName: "System Error",
+        content: `Execution failed: ${err.message}. Ensure AI microservice is running.`,
+        createdAt: new Date().toISOString()
+      };
+      setMessages((prev) => [...prev, errorMsg]);
     } finally {
       setLoading(false);
     }
   };
 
-  const exportTranscript = () => {
-    const textData = messages.map((m) => `[${m.sender_name}] (${m.sender_type}): ${m.content}`).join("\n\n");
-    const blob = new Blob([textData], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `chat-transcript-${activeConvId || 'export'}.txt`;
-    a.click();
-  };
-
-  const getAgentColor = (code) => {
-    switch (code) {
-      case "hr_agent": return "#818cf8";
-      case "sales_agent": return "#34d399";
-      case "tech_support": return "#f87171";
-      case "data_analyst": return "#38bdf8";
-      case "workflow_agent": return "#fbbf24";
-      default: return "#c084fc";
+  const handleApproveAction = async (approvalId) => {
+    try {
+      await api.submitApprovalDecision(approvalId, "APPROVED", `Approved by ${user?.fullName}`);
+      alert("Action approved! The Action Agent has executed the operation.");
+      if (activeConvId) loadMessages(activeConvId);
+    } catch (err) {
+      alert("Approval failed: " + err.message);
     }
   };
 
   return (
-    <div style={{ display: 'flex', height: 'calc(100vh - 64px)', overflow: 'hidden' }}>
-      {/* Conversations History Sidebar */}
+    <div style={{ display: 'flex', height: 'calc(100vh - 64px)', overflow: 'hidden', width: '100%', boxSizing: 'border-box' }}>
+      {/* Sessions Sidebar */}
       <div style={{
         width: '280px',
         borderRight: '1px solid var(--border-color)',
@@ -187,16 +201,17 @@ export const ChatInterface = () => {
         </button>
 
         <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.5rem', paddingLeft: '0.25rem' }}>
-          Conversation History
+          MongoDB Conversation History
         </div>
 
         <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
           {conversations.map((conv) => {
-            const isActive = conv.id === activeConvId;
+            const cId = conv.id || conv._id;
+            const isActive = cId === activeConvId;
             return (
               <div
-                key={conv.id}
-                onClick={() => setActiveConvId(conv.id)}
+                key={cId}
+                onClick={() => setActiveConvId(cId)}
                 style={{
                   padding: '0.65rem 0.75rem',
                   borderRadius: 'var(--radius-sm)',
@@ -207,23 +222,14 @@ export const ChatInterface = () => {
                   fontSize: '0.85rem',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'space-between',
+                  gap: '0.5rem',
                   transition: 'all 0.2s ease'
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', overflow: 'hidden' }}>
-                  <Bot size={15} color={isActive ? "var(--accent-primary)" : "var(--text-muted)"} />
-                  <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {conv.title}
-                  </span>
-                </div>
-                <button
-                  onClick={(e) => handleDeleteChat(e, conv.id)}
-                  style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', opacity: 0.6 }}
-                  title="Delete Chat"
-                >
-                  <Trash2 size={14} />
-                </button>
+                <Bot size={15} color={isActive ? "var(--accent-primary)" : "var(--text-muted)"} />
+                <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {conv.title || "Conversation"}
+                </span>
               </div>
             );
           })}
@@ -231,7 +237,7 @@ export const ChatInterface = () => {
       </div>
 
       {/* Main Chat Workspace */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--bg-secondary)', position: 'relative' }}>
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', background: 'var(--bg-secondary)', position: 'relative', overflow: 'hidden' }}>
         {/* Chat Control Header */}
         <div style={{
           padding: '0.85rem 1.5rem',
@@ -247,8 +253,8 @@ export const ChatInterface = () => {
               Assigned Agent:
             </div>
             <select
-              value={selectedAgentId}
-              onChange={(e) => setSelectedAgentId(e.target.value)}
+              value={selectedAgentCode}
+              onChange={(e) => setSelectedAgentCode(e.target.value)}
               style={{
                 background: 'var(--bg-primary)',
                 color: 'var(--text-primary)',
@@ -260,30 +266,29 @@ export const ChatInterface = () => {
                 cursor: 'pointer'
               }}
             >
-              <option value="">⚡ Auto Router (Intelligent AI Supervisor)</option>
-              {agents.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.name} ({a.code})
+              {agentsList.map((a) => (
+                <option key={a.code} value={a.code}>
+                  {a.name}
                 </option>
               ))}
             </select>
 
             <span className="badge badge-indigo" style={{ fontSize: '0.7rem' }}>
-              RAG & Memory Active
+              Qdrant RAG & HITL Active
             </span>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <button onClick={exportTranscript} className="btn-secondary" style={{ padding: '0.4rem 0.75rem', fontSize: '0.8rem' }}>
-              <Download size={15} /> Export Transcript
-            </button>
+            <span className="badge badge-cyan" style={{ fontSize: '0.72rem' }}>
+              Clearance: {user?.role || "EMPLOYEE"}
+            </span>
           </div>
         </div>
 
-        {/* Message History Feed */}
+        {/* Message Feed */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem 2rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           {messages.length === 0 ? (
-            <div style={{ textAlign: 'center', margin: 'auto', maxWidth: '500px' }}>
+            <div style={{ textAlign: 'center', margin: 'auto', maxWidth: '600px' }}>
               <div style={{
                 width: '64px',
                 height: '64px',
@@ -301,16 +306,16 @@ export const ChatInterface = () => {
                 Enterprise Multi-Agent Assistant
               </h2>
               <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: '1.5', marginBottom: '1.5rem' }}>
-                Ask questions about HR policy, sales pipeline stats, technical bug diagnostics, automated workflow triggers, or data queries!
+                Ask anything across company policies, budgets, code architecture, or database metrics. The Orchestrator automatically delegates tasks to specialized agents.
               </p>
 
-              {/* Sample Quick Prompts */}
+              {/* Sample Prompts */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                 {[
                   "What is our company PTO & parental leave policy?",
-                  "Show Q3 sales deal pipeline summary",
-                  "Diagnose database connection pool error",
-                  "Generate SQL query for agent resolution times"
+                  "Show Q3 consolidated departmental budget variance",
+                  "Query database message analytics and user count",
+                  "Provision cloud cluster staging-ai-swarm"
                 ].map((prompt, idx) => (
                   <button
                     key={idx}
@@ -331,20 +336,15 @@ export const ChatInterface = () => {
               </div>
             </div>
           ) : (
-            messages.map((msg) => {
-              const isUser = msg.sender_type === "user";
-              const isSystem = msg.sender_type === "system";
-              
-              let meta = {};
-              try {
-                if (msg.metadata_json) meta = JSON.parse(msg.metadata_json);
-              } catch (e) {}
+            messages.map((msg, index) => {
+              const isUser = msg.senderType === "USER";
+              const isSystem = msg.senderType === "SYSTEM";
 
               if (isSystem) {
                 return (
-                  <div key={msg.id} style={{ textAlign: 'center', margin: '0.5rem 0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                    <span style={{ padding: '0.35rem 0.85rem', background: 'var(--bg-glass)', borderRadius: '9999px', border: '1px solid var(--border-color)' }}>
-                      ℹ️ {msg.content}
+                  <div key={index} style={{ textAlign: 'center', margin: '0.5rem 0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                    <span style={{ padding: '0.35rem 0.85rem', background: 'rgba(239, 68, 68, 0.15)', borderRadius: '9999px', border: '1px solid rgba(239, 68, 68, 0.3)', color: 'var(--accent-danger)' }}>
+                      ⚠️ {msg.content}
                     </span>
                   </div>
                 );
@@ -352,7 +352,7 @@ export const ChatInterface = () => {
 
               return (
                 <div
-                  key={msg.id}
+                  key={index}
                   className="animate-fade-in"
                   style={{
                     display: 'flex',
@@ -361,7 +361,6 @@ export const ChatInterface = () => {
                     alignItems: 'flex-start'
                   }}
                 >
-                  {/* Avatar Icon */}
                   <div style={{
                     width: '36px',
                     height: '36px',
@@ -376,8 +375,7 @@ export const ChatInterface = () => {
                     {isUser ? <User size={18} color="#fff" /> : <Bot size={18} color="var(--accent-secondary)" />}
                   </div>
 
-                  {/* Message Card Bubble */}
-                  <div style={{ maxWidth: '75%' }}>
+                  <div style={{ maxWidth: '80%' }}>
                     <div style={{
                       display: 'flex',
                       alignItems: 'center',
@@ -386,11 +384,11 @@ export const ChatInterface = () => {
                       justifyContent: isUser ? 'flex-end' : 'flex-start'
                     }}>
                       <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-primary)' }}>
-                        {msg.sender_name}
+                        {msg.senderName}
                       </span>
-                      {meta.duration_ms && (
+                      {msg.durationMs && (
                         <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                          ⚡ {meta.duration_ms}ms
+                          ⚡ {msg.durationMs}ms
                         </span>
                       )}
                     </div>
@@ -402,42 +400,89 @@ export const ChatInterface = () => {
                         borderRadius: 'var(--radius-md)',
                         background: isUser ? 'rgba(99, 102, 241, 0.18)' : 'var(--bg-card)',
                         border: isUser ? '1px solid rgba(99, 102, 241, 0.4)' : '1px solid var(--border-color)',
-                        whiteSpace: 'pre-wrap'
+                        whiteSpace: isUser ? 'pre-wrap' : 'normal',
+                        lineHeight: '1.7',
+                        fontSize: '0.92rem'
                       }}
                     >
-                      {msg.content}
+                      {isUser ? (
+                        msg.content
+                      ) : (
+                        <ReactMarkdown
+                          components={{
+                            h1: ({node, ...props}) => <h1 style={{fontSize:'1.3rem', fontWeight:700, margin:'0.6rem 0', color:'#e2e8f0'}} {...props}/>,
+                            h2: ({node, ...props}) => <h2 style={{fontSize:'1.1rem', fontWeight:700, margin:'0.5rem 0', color:'#e2e8f0'}} {...props}/>,
+                            h3: ({node, ...props}) => <h3 style={{fontSize:'1rem', fontWeight:600, margin:'0.4rem 0', color:'#cbd5e1'}} {...props}/>,
+                            p:  ({node, ...props}) => <p style={{margin:'0.4rem 0'}} {...props}/>,
+                            ul: ({node, ...props}) => <ul style={{paddingLeft:'1.4rem', margin:'0.4rem 0'}} {...props}/>,
+                            ol: ({node, ...props}) => <ol style={{paddingLeft:'1.4rem', margin:'0.4rem 0'}} {...props}/>,
+                            li: ({node, ...props}) => <li style={{marginBottom:'0.2rem'}} {...props}/>,
+                            strong: ({node, ...props}) => <strong style={{color:'#a5f3fc', fontWeight:600}} {...props}/>,
+                            code: ({node, inline, ...props}) => inline
+                              ? <code style={{background:'rgba(99,102,241,0.2)', padding:'0.1rem 0.4rem', borderRadius:'4px', fontSize:'0.85em', color:'#c4b5fd'}} {...props}/>
+                              : <code style={{display:'block', background:'rgba(0,0,0,0.3)', padding:'0.75rem', borderRadius:'8px', fontSize:'0.82em', overflowX:'auto', margin:'0.5rem 0', color:'#86efac'}} {...props}/>,
+                            blockquote: ({node, ...props}) => <blockquote style={{borderLeft:'3px solid var(--accent-primary)', paddingLeft:'0.8rem', margin:'0.5rem 0', color:'var(--text-secondary)', fontStyle:'italic'}} {...props}/>,
+                            hr: ({node, ...props}) => <hr style={{border:'none', borderTop:'1px solid var(--border-color)', margin:'0.8rem 0'}} {...props}/>,
+                            table: ({node, ...props}) => <table style={{borderCollapse:'collapse', width:'100%', margin:'0.5rem 0', fontSize:'0.85rem'}} {...props}/>,
+                            th: ({node, ...props}) => <th style={{border:'1px solid var(--border-color)', padding:'0.4rem 0.6rem', background:'rgba(99,102,241,0.15)', textAlign:'left'}} {...props}/>,
+                            td: ({node, ...props}) => <td style={{border:'1px solid var(--border-color)', padding:'0.4rem 0.6rem'}} {...props}/>,
+                          }}
+                        >
+                          {msg.content}
+                        </ReactMarkdown>
+                      )}
 
-                      {/* Multi-Agent Sub-Task Trace Box */}
-                      {meta.subagent_traces && meta.subagent_traces.length > 0 && (
+                      {/* Multi-Agent Execution Traces - Collapsible */}
+                      <AgentTraces traces={msg.agentTraces} />
+
+                      {/* Human-in-the-Loop (HITL) Inline Approval Banner */}
+                      {msg.approval_required && msg.approval_id && (
                         <div style={{
                           marginTop: '0.85rem',
-                          padding: '0.65rem',
-                          background: 'rgba(6, 182, 212, 0.08)',
-                          border: '1px solid rgba(6, 182, 212, 0.25)',
+                          padding: '0.85rem',
+                          background: 'rgba(245, 158, 11, 0.12)',
+                          border: '1px solid rgba(245, 158, 11, 0.4)',
                           borderRadius: '8px',
-                          fontSize: '0.78rem'
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between'
                         }}>
-                          <div style={{ fontWeight: 700, color: 'var(--accent-secondary)', display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.35rem' }}>
-                            <Layers size={14} /> Multi-Agent Collaboration Trace
-                          </div>
-                          {meta.subagent_traces.map((tr, idx) => (
-                            <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)' }}>
-                              <CheckCircle size={13} color="var(--accent-success)" />
-                              <strong>{tr.agent_name}</strong>: {tr.action}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                            <ShieldAlert size={20} color="var(--accent-warning)" />
+                            <div>
+                              <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--accent-warning)' }}>
+                                Human-in-the-Loop Review Required
+                              </div>
+                              <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
+                                Request ID: #{msg.approval_id}
+                              </div>
                             </div>
-                          ))}
+                          </div>
+                          {isManager || isOrgAdmin ? (
+                            <button
+                              onClick={() => handleApproveAction(msg.approval_id)}
+                              className="btn-primary"
+                              style={{ padding: '0.35rem 0.85rem', fontSize: '0.78rem' }}
+                            >
+                              Approve & Execute Action
+                            </button>
+                          ) : (
+                            <span className="badge badge-amber" style={{ fontSize: '0.7rem' }}>
+                              Pending Manager Review
+                            </span>
+                          )}
                         </div>
                       )}
 
                       {/* RAG Knowledge Citations Button */}
-                      {meta.citations && meta.citations.length > 0 && (
+                      {msg.citations && msg.citations.length > 0 && (
                         <div style={{ marginTop: '0.85rem' }}>
                           <button
-                            onClick={() => setShowRAGModal(meta.citations)}
+                            onClick={() => setShowRAGModal(msg.citations)}
                             className="badge badge-cyan"
                             style={{ cursor: 'pointer', border: '1px solid rgba(6, 182, 212, 0.4)' }}
                           >
-                            <FileText size={12} /> {meta.citations.length} Knowledge Base Citations
+                            <FileText size={12} /> {msg.citations.length} Knowledge Base Citations
                           </button>
                         </div>
                       )}
@@ -454,7 +499,7 @@ export const ChatInterface = () => {
                 <Bot size={18} className="pulse-glow" color="var(--accent-primary)" />
               </div>
               <div className="glass-card" style={{ padding: '0.75rem 1.25rem', fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Cpu size={16} className="pulse-glow" /> AI Agent is reasoning & querying knowledge base...
+                <Cpu size={16} className="pulse-glow" /> Orchestrator is executing multi-agent DAG pipeline...
               </div>
             </div>
           )}
@@ -462,35 +507,40 @@ export const ChatInterface = () => {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input Bar Form */}
+        {/* Input Bar */}
         <form
           onSubmit={handleSendMessage}
           style={{
-            padding: '1rem 1.5rem',
+            padding: '0.75rem 1rem',
             borderTop: '1px solid var(--border-color)',
             background: 'var(--bg-secondary)',
             display: 'flex',
-            gap: '0.75rem'
+            gap: '0.5rem',
+            alignItems: 'center',
+            flexShrink: 0,
+            boxSizing: 'border-box'
           }}
         >
           <input
             type="text"
             value={inputQuery}
             onChange={(e) => setInputQuery(e.target.value)}
-            placeholder="Ask anything... (e.g. PTO policy, sales pipeline, API error logs, workflow rules)"
+            placeholder="Ask anything... (e.g. PTO policy, Q3 budget variance, diagnose connection pool, provision cluster)"
             style={{
               flex: 1,
-              padding: '0.85rem 1.25rem',
+              minWidth: 0,
+              padding: '0.75rem 1rem',
               borderRadius: 'var(--radius-md)',
               background: 'var(--bg-primary)',
               border: '1px solid var(--border-color)',
               color: '#fff',
-              fontSize: '0.92rem',
-              outline: 'none'
+              fontSize: '0.9rem',
+              outline: 'none',
+              boxSizing: 'border-box'
             }}
           />
-          <button type="submit" disabled={loading || !inputQuery.trim()} className="btn-primary" style={{ padding: '0 1.5rem' }}>
-            <Send size={18} /> Send
+          <button type="submit" disabled={loading || !inputQuery.trim()} className="btn-primary" style={{ padding: '0.75rem 1.25rem', flexShrink: 0, whiteSpace: 'nowrap' }}>
+            <Send size={16} /> Send
           </button>
         </form>
       </div>
@@ -507,18 +557,27 @@ export const ChatInterface = () => {
           justifyContent: 'center',
           zIndex: 100
         }}>
-          <div className="glass-card animate-fade-in" style={{ width: '100%', maxWidth: '540px', padding: '1.5rem', background: 'var(--bg-secondary)' }}>
+          <div className="glass-card animate-fade-in" style={{ width: '100%', maxWidth: '560px', padding: '1.5rem', background: 'var(--bg-secondary)' }}>
             <h3 style={{ fontSize: '1.15rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <FileText color="var(--accent-secondary)" /> Knowledge Base Citations
+              <FileText color="var(--accent-secondary)" /> Verified Knowledge Base Citations
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '350px', overflowY: 'auto' }}>
               {showRAGModal.map((c, idx) => (
                 <div key={idx} style={{ padding: '0.75rem', background: 'var(--bg-primary)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
-                    <span style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--accent-primary)' }}>{c.filename}</span>
-                    <span className="badge badge-emerald" style={{ fontSize: '0.65rem' }}>Relevance: {intVal(c.score * 100)}%</span>
+                    <span style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--accent-primary)' }}>
+                      {c.source_name || c.sourceName}
+                    </span>
+                    <span className="badge badge-emerald" style={{ fontSize: '0.65rem' }}>
+                      Relevance: {Math.round((c.relevance_score || c.relevanceScore) * 100)}%
+                    </span>
                   </div>
-                  <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: '1.4' }}>"{c.snippet}"</p>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '0.35rem' }}>
+                    Section: {c.section || "General"} • Page: {c.page_number || c.pageNumber || 1}
+                  </div>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+                    "{c.snippet}"
+                  </p>
                 </div>
               ))}
             </div>
@@ -531,5 +590,3 @@ export const ChatInterface = () => {
     </div>
   );
 };
-
-const intVal = (val) => Math.round(val);

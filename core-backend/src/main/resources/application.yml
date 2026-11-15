@@ -1,0 +1,49 @@
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: enterprise-core-backend
+
+  # Primary & Exclusive Database: MongoDB
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb+srv://vishalkrpatel14_db_user:6Mygn5JCDFuXHC5O@cluster0.0bopsue.mongodb.net/enterprise_ai?retryWrites=true&w=majority&appName=Cluster0}
+      database: ${MONGODB_DB_NAME:enterprise_ai}
+      auto-index-creation: false
+
+  # Disable Redis autoconfiguration when Redis is not running locally
+  # Remove these excludes if you have Redis running (docker run -d -p 6379:6379 redis:7-alpine)
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+
+  # Multipart Upload Config (Supports large enterprise PDFs/DOCXs)
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+
+# Enterprise Security & JWT Settings
+security:
+  jwt:
+    secret: ${JWT_SECRET:4c65637572655f456e74657270726973655f4a57545f53757065725f5365637265745f4b65795f3230323621}
+    access-expiration-ms: ${JWT_ACCESS_EXPIRATION_MS:3600000}
+    refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000}
+
+# Integration with Python AI & Multi-Agent Service
+ai-service:
+  url: ${AI_SERVICE_URL:http://localhost:8000}
+  internal-api-key: ${INTERNAL_SERVICE_API_KEY:enterprise-internal-m2m-token-84920482049284092}
+
+# OpenAPI / Swagger
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha

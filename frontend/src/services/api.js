@@ -2,8 +2,8 @@
 // Connects to Spring Boot Core Backend & Python FastAPI Multi-Agent Service
 // Supports full MongoDB data persistence, RAG Citations, and HITL Approvals
 
-const CORE_API = "http://localhost:8080/api/v1";
-const AI_API = "http://localhost:8000/ai/v1";
+const CORE_API = import.meta.env.VITE_CORE_BACKEND_API_URL || "https://enterprise-core-backend.onrender.com/api/v1";
+const AI_API = import.meta.env.VITE_AI_SERVICE_STREAM_URL || "https://enterprise-multi-agent-ai-assistant.onrender.com/ai/v1";
 
 const getHeaders = () => {
   const token = localStorage.getItem("token");

@@ -44,13 +44,13 @@ export const AgentDirectory = () => {
   };
 
   return (
-    <div style={{ padding: '2rem', flex: 1, overflowY: 'auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+    <div className="page-container">
+      <div className="page-header">
         <div>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+          <h2 style={{ fontSize: 'clamp(1.2rem, 3.5vw, 1.5rem)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
             <Users className="gradient-text" size={26} /> Specialized AI Agents Directory
           </h2>
-          <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
             Configure agent personas, system prompts, operational tools, and temperature settings.
           </p>
         </div>
@@ -59,7 +59,7 @@ export const AgentDirectory = () => {
         </span>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1.25rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.25rem' }}>
         {agents.map((agent) => (
           <div
             key={agent.id}

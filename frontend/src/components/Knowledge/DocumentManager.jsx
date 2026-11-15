@@ -68,13 +68,13 @@ export const DocumentManager = () => {
   };
 
   return (
-    <div style={{ padding: '2rem', flex: 1, overflowY: 'auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+    <div className="page-container">
+      <div className="page-header">
         <div>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+          <h2 style={{ fontSize: 'clamp(1.2rem, 3.5vw, 1.5rem)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
             <Database className="gradient-text" size={26} /> RAG Knowledge Base Hub
           </h2>
-          <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
             Upload company policies, technical SLAs, and sales documentation to empower AI agent retrieval.
           </p>
         </div>
@@ -86,7 +86,7 @@ export const DocumentManager = () => {
       </div>
 
       {/* Semantic Search Sandbox Tool */}
-      <div className="glass-card" style={{ padding: '1.25rem', marginBottom: '2rem', border: '1px solid var(--border-glow)' }}>
+      <div className="glass-card" style={{ padding: '1.25rem', marginBottom: '1.5rem', border: '1px solid var(--border-glow)' }}>
         <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <Search size={18} color="var(--accent-secondary)" /> Live RAG Retrieval Vector Sandbox
         </h3>
@@ -94,15 +94,15 @@ export const DocumentManager = () => {
           Test how the RAG engine chunks text and scores semantic relevance against user queries.
         </p>
 
-        <form onSubmit={handleTestSearch} style={{ display: 'flex', gap: '0.75rem' }}>
+        <form onSubmit={handleTestSearch} style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
           <input
             type="text"
             value={testQuery}
             onChange={(e) => setTestQuery(e.target.value)}
             placeholder="Type query to test vector similarity matching (e.g. 'What is our PTO policy?')..."
-            style={{ flex: 1, padding: '0.65rem 1rem', borderRadius: '8px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: '#fff', fontSize: '0.9rem' }}
+            style={{ flex: '1 1 240px', minWidth: 0, padding: '0.65rem 1rem', borderRadius: '8px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: '#fff', fontSize: '0.9rem' }}
           />
-          <button type="submit" disabled={searching} className="btn-primary">
+          <button type="submit" disabled={searching} className="btn-primary" style={{ whiteSpace: 'nowrap' }}>
             {searching ? "Searching..." : "Test RAG Query"}
           </button>
         </form>
@@ -114,12 +114,12 @@ export const DocumentManager = () => {
             </div>
             {searchResults.map((match, idx) => (
               <div key={idx} style={{ padding: '0.75rem', background: 'var(--bg-primary)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem', flexWrap: 'wrap', gap: '0.35rem' }}>
                   <span style={{ fontWeight: 600, fontSize: '0.85rem' }}>
                     {match.source_name || match.filename} — <em style={{ fontWeight: 400, color: 'var(--text-secondary)' }}>{match.section}</em>
                   </span>
                   <span className="badge badge-emerald">
-                    Score: {intVal((match.relevance_score || match.similarity_score || 0) * 100)}%
+                    Score: {Math.round((match.relevance_score || match.similarity_score || 0) * 100)}%
                   </span>
                 </div>
                 <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>"{match.snippet}"</p>

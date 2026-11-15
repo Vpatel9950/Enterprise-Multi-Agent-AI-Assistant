@@ -13,7 +13,7 @@ import {
   Database
 } from "lucide-react";
 
-export const Sidebar = ({ activeTab, setActiveTab }) => {
+export const Sidebar = ({ activeTab, setActiveTab, isMobileMenuOpen }) => {
   const { isManager, isOrgAdmin, isSuperAdmin } = useAuth();
 
   const navItems = [
@@ -27,18 +27,23 @@ export const Sidebar = ({ activeTab, setActiveTab }) => {
   ];
 
   return (
-    <aside style={{
-      width: '260px',
-      borderRight: '1px solid var(--border-color)',
-      background: 'var(--bg-secondary)',
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'space-between',
-      padding: '1.25rem 0.85rem',
-      height: 'calc(100vh - 64px)',
-      position: 'sticky',
-      top: '64px'
-    }}>
+    <aside 
+      className={isMobileMenuOpen ? "mobile-drawer" : "hide-on-mobile"}
+      style={{
+        width: '260px',
+        borderRight: '1px solid var(--border-color)',
+        background: 'var(--bg-secondary)',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        padding: '1.25rem 0.85rem',
+        height: 'calc(100vh - 64px)',
+        position: 'sticky',
+        top: '64px',
+        flexShrink: 0,
+        zIndex: 40
+      }}
+    >
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
         <div style={{ padding: '0 0.5rem 0.5rem 0.5rem', fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
           Workspace Navigation

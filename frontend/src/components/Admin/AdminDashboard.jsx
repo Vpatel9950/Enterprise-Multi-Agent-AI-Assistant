@@ -88,7 +88,7 @@ export const AdminDashboard = () => {
   }
 
   return (
-    <div style={{ padding: '2rem', flex: 1, overflowY: 'auto' }}>
+    <div className="page-container">
       {/* Scope Banner: Super Admin vs Org Admin */}
       <div style={{
         padding: '1rem 1.25rem',
@@ -98,12 +98,14 @@ export const AdminDashboard = () => {
         border: isSuperAdmin ? '1px solid rgba(239, 68, 68, 0.25)' : '1px solid rgba(99, 102, 241, 0.25)',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'space-between'
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '0.75rem'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
           <ShieldCheck size={24} color={isSuperAdmin ? '#ef4444' : 'var(--accent-primary)'} />
           <div>
-            <div style={{ fontWeight: 700, fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div style={{ fontWeight: 700, fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
               {isSuperAdmin ? (
                 <>
                   <span style={{ color: '#ef4444' }}>⚡ PLATFORM SUPER ADMIN VIEW</span>
@@ -123,18 +125,18 @@ export const AdminDashboard = () => {
             </p>
           </div>
         </div>
-        <div style={{ textAlign: 'right', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
           <div>Logged in as: <strong>{user?.fullName}</strong></div>
           <div>Tenant ID: <code style={{ fontSize: '0.7rem' }}>{user?.organizationId || 'Global'}</code></div>
         </div>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+      <div className="page-header">
         <div>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+          <h2 style={{ fontSize: 'clamp(1.2rem, 3.5vw, 1.5rem)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
             <BarChart3 className="gradient-text" size={26} /> Admin Operations & Telemetry Dashboard
           </h2>
-          <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
             Monitor real-time system performance, multi-agent usage metrics, and user access control (RBAC).
           </p>
         </div>
@@ -193,7 +195,7 @@ export const AdminDashboard = () => {
       </div>
 
       {/* Agent Performance Ranking & Telemetry Feed Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '2rem' }}>
+      <div className="responsive-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '2rem' }}>
         <div className="glass-card" style={{ padding: '1.5rem' }}>
           <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1rem' }}>Top Active AI Agents (Swarm Utilization)</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -299,9 +301,6 @@ export const AdminDashboard = () => {
           </table>
         </div>
       </div>
-    </div>
-  );
-};
     </div>
   );
 };

@@ -61,6 +61,7 @@ export const ChatInterface = () => {
   const [inputQuery, setInputQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [showRAGModal, setShowRAGModal] = useState(null);
+  const [showSessions, setShowSessions] = useState(false);
   const messagesEndRef = useRef(null);
 
   const agentsList = [
@@ -186,22 +187,42 @@ export const ChatInterface = () => {
   };
 
   return (
-    <div style={{ display: 'flex', height: 'calc(100vh - 64px)', overflow: 'hidden', width: '100%', boxSizing: 'border-box' }}>
+    <div style={{ display: 'flex', height: 'calc(100vh - 64px)', overflow: 'hidden', width: '100%', boxSizing: 'border-box', position: 'relative' }}>
+      {/* Mobile Backdrop for Sessions Drawer */}
+      {showSessions && (
+        <div 
+          className="mobile-overlay show-on-mobile"
+          onClick={() => setShowSessions(false)}
+        />
+      )}
+
       {/* Sessions Sidebar */}
-      <div style={{
-        width: '280px',
-        borderRight: '1px solid var(--border-color)',
-        background: 'var(--bg-primary)',
-        display: 'flex',
-        flexDirection: 'column',
-        padding: '1rem 0.75rem'
-      }}>
-        <button onClick={handleNewChat} className="btn-primary" style={{ width: '100%', justifyContent: 'center', marginBottom: '1rem' }}>
+      <div 
+        className={`mobile-drawer-sessions ${showSessions ? '' : 'hide-on-mobile'}`}
+        style={{
+          width: '280px',
+          borderRight: '1px solid var(--border-color)',
+          background: 'var(--bg-primary)',
+          display: 'flex',
+          flexDirection: 'column',
+          padding: '1rem 0.75rem',
+          height: '100%',
+          boxSizing: 'border-box'
+        }}
+      >
+        <button onClick={() => { handleNewChat(); setShowSessions(false); }} className="btn-primary" style={{ width: '100%', justifyContent: 'center', marginBottom: '1rem' }}>
           <Plus size={16} /> New AI Session
         </button>
 
-        <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.5rem', paddingLeft: '0.25rem' }}>
-          MongoDB Conversation History
+        <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.5rem', paddingLeft: '0.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>MongoDB History</span>
+          <button 
+            onClick={() => setShowSessions(false)} 
+            className="show-on-mobile btn-secondary"
+            style={{ padding: '0.2rem 0.4rem', fontSize: '0.68rem', borderRadius: '4px' }}
+          >
+            ✕
+          </button>
         </div>
 
         <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
@@ -211,7 +232,7 @@ export const ChatInterface = () => {
             return (
               <div
                 key={cId}
-                onClick={() => setActiveConvId(cId)}
+                onClick={() => { setActiveConvId(cId); setShowSessions(false); }}
                 style={{
                   padding: '0.65rem 0.75rem',
                   borderRadius: 'var(--radius-sm)',
@@ -240,77 +261,91 @@ export const ChatInterface = () => {
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', background: 'var(--bg-secondary)', position: 'relative', overflow: 'hidden' }}>
         {/* Chat Control Header */}
         <div style={{
-          padding: '0.85rem 1.5rem',
+          padding: '0.65rem 1rem',
           borderBottom: '1px solid var(--border-color)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          background: 'var(--bg-glass)'
+          background: 'var(--bg-glass)',
+          flexWrap: 'wrap',
+          gap: '0.5rem'
         }}>
-          {/* Agent Picker Dropdown */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
-              Assigned Agent:
-            </div>
-            <select
-              value={selectedAgentCode}
-              onChange={(e) => setSelectedAgentCode(e.target.value)}
-              style={{
-                background: 'var(--bg-primary)',
-                color: 'var(--text-primary)',
-                border: '1px solid var(--border-color)',
-                borderRadius: '8px',
-                padding: '0.45rem 0.85rem',
-                fontSize: '0.85rem',
-                fontWeight: 600,
-                cursor: 'pointer'
-              }}
+          {/* Left: Mobile Sessions Toggle & Agent Picker */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => setShowSessions(!showSessions)}
+              className="btn-secondary show-on-mobile"
+              style={{ padding: '0.35rem 0.6rem', fontSize: '0.75rem', gap: '0.35rem' }}
+              title="Toggle Conversation History"
             >
-              {agentsList.map((a) => (
-                <option key={a.code} value={a.code}>
-                  {a.name}
-                </option>
-              ))}
-            </select>
+              <Clock size={14} /> Sessions ({conversations.length})
+            </button>
 
-            <span className="badge badge-indigo" style={{ fontSize: '0.7rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <span className="hide-on-mobile" style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                Agent:
+              </span>
+              <select
+                value={selectedAgentCode}
+                onChange={(e) => setSelectedAgentCode(e.target.value)}
+                style={{
+                  background: 'var(--bg-primary)',
+                  color: 'var(--text-primary)',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: '8px',
+                  padding: '0.35rem 0.65rem',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  maxWidth: '220px'
+                }}
+              >
+                {agentsList.map((a) => (
+                  <option key={a.code} value={a.code}>
+                    {a.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <span className="badge badge-indigo hide-on-mobile" style={{ fontSize: '0.68rem' }}>
               Qdrant RAG & HITL Active
             </span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span className="badge badge-cyan" style={{ fontSize: '0.72rem' }}>
-              Clearance: {user?.role || "EMPLOYEE"}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <span className="badge badge-cyan" style={{ fontSize: '0.68rem' }}>
+              {user?.role || "EMPLOYEE"}
             </span>
           </div>
         </div>
 
         {/* Message Feed */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem 2rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           {messages.length === 0 ? (
-            <div style={{ textAlign: 'center', margin: 'auto', maxWidth: '600px' }}>
+            <div style={{ textAlign: 'center', margin: 'auto', maxWidth: '600px', width: '100%' }}>
               <div style={{
-                width: '64px',
-                height: '64px',
-                borderRadius: '20px',
+                width: '56px',
+                height: '56px',
+                borderRadius: '16px',
                 background: 'var(--gradient-primary)',
                 display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                marginBottom: '1rem',
+                marginBottom: '0.75rem',
                 boxShadow: 'var(--shadow-glow)'
               }}>
-                <Sparkles size={32} color="#fff" />
+                <Sparkles size={28} color="#fff" />
               </div>
-              <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '0.5rem' }}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.35rem' }}>
                 Enterprise Multi-Agent Assistant
               </h2>
-              <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: '1.5', marginBottom: '1.5rem' }}>
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: '1.5', marginBottom: '1.25rem' }}>
                 Ask anything across company policies, budgets, code architecture, or database metrics. The Orchestrator automatically delegates tasks to specialized agents.
               </p>
 
               {/* Sample Prompts */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+              <div className="chat-prompt-grid">
                 {[
                   "What is our company PTO & parental leave policy?",
                   "Show Q3 consolidated departmental budget variance",
@@ -324,7 +359,7 @@ export const ChatInterface = () => {
                     style={{
                       padding: '0.75rem',
                       textAlign: 'left',
-                      fontSize: '0.8rem',
+                      fontSize: '0.78rem',
                       color: 'var(--text-primary)',
                       cursor: 'pointer',
                       border: '1px solid var(--border-color)'

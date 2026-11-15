@@ -15,6 +15,7 @@ const MainAppContent = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("chat");
   const [showAuthModal, setShowAuthModal] = useState(!user);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // If not logged in, show auth modal fullscreen
   if (!user) {
@@ -27,12 +28,32 @@ const MainAppContent = () => {
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "var(--bg-primary)", color: "var(--text-primary)" }}>
-      <Navbar activeTab={activeTab} onOpenAuthModal={() => setShowAuthModal(true)} />
+      <Navbar 
+        activeTab={activeTab} 
+        onOpenAuthModal={() => setShowAuthModal(true)} 
+        isMobileMenuOpen={isMobileMenuOpen}
+        onToggleMobileMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+      />
       
-      <div style={{ display: "flex", flex: 1 }}>
-        <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+      <div style={{ display: "flex", flex: 1, position: "relative" }}>
+        {/* Mobile backdrop overlay */}
+        {isMobileMenuOpen && (
+          <div 
+            className="mobile-overlay" 
+            onClick={() => setIsMobileMenuOpen(false)} 
+          />
+        )}
+
+        <Sidebar 
+          activeTab={activeTab} 
+          setActiveTab={(tab) => {
+            setActiveTab(tab);
+            setIsMobileMenuOpen(false); // auto-close on selection
+          }} 
+          isMobileMenuOpen={isMobileMenuOpen}
+        />
         
-        <main style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <main style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
           {activeTab === "chat" && <ChatInterface />}
           {activeTab === "agents" && <AgentDirectory />}
           {activeTab === "knowledge" && <DocumentManager />}

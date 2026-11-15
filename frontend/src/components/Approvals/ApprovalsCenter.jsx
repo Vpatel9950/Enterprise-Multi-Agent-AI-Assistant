@@ -67,13 +67,13 @@ export const ApprovalsCenter = () => {
   };
 
   return (
-    <div style={{ padding: '2rem', flex: 1, overflowY: 'auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+    <div className="page-container">
+      <div className="page-header">
         <div>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+          <h2 style={{ fontSize: 'clamp(1.2rem, 3.5vw, 1.5rem)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
             <CheckSquare className="gradient-text" size={26} /> Human-in-the-Loop (HITL) Action Approvals
           </h2>
-          <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
             Enterprise safety gate ensuring state mutation, external notifications, and cloud provisioning require explicit manager review.
           </p>
         </div>
@@ -97,16 +97,16 @@ export const ApprovalsCenter = () => {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           {approvals.map((req) => (
-            <div key={req.id || req._id} className="glass-card" style={{ padding: '1.5rem', border: req.status === 'PENDING' ? '1px solid var(--border-glow)' : '1px solid var(--border-color)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+            <div key={req.id || req._id} className="glass-card" style={{ padding: '1.25rem', border: req.status === 'PENDING' ? '1px solid var(--border-glow)' : '1px solid var(--border-color)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
                 <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.35rem' }}>
-                    <h3 style={{ fontSize: '1.15rem', fontWeight: 700 }}>{req.actionType}</h3>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.35rem', flexWrap: 'wrap' }}>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>{req.actionType}</h3>
                     {getRiskBadge(req.riskLevel)}
                     {getStatusBadge(req.status)}
                   </div>
-                  <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <User size={14} /> Requested by: <strong>{req.requestedByName || "Employee"}</strong> • Target System: <span style={{ color: 'var(--accent-secondary)' }}>{req.targetSystem}</span>
+                  <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    <User size={14} /> Requested by: <strong>{req.requestedByName || "Employee"}</strong> • Target: <span style={{ color: 'var(--accent-secondary)' }}>{req.targetSystem}</span>
                   </div>
                 </div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
@@ -127,30 +127,32 @@ export const ApprovalsCenter = () => {
               {/* Action Controls for Managers/Admins */}
               {req.status === 'PENDING' ? (
                 isManager || isOrgAdmin || isSuperAdmin ? (
-                  <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', paddingTop: '0.5rem', borderTop: '1px solid var(--border-color)' }}>
+                  <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', paddingTop: '0.5rem', borderTop: '1px solid var(--border-color)', flexWrap: 'wrap' }}>
                     <input
                       type="text"
                       placeholder="Add optional review notes / justification..."
                       value={reviewNotes[req.id || req._id] || ""}
                       onChange={(e) => setReviewNotes({ ...reviewNotes, [req.id || req._id]: e.target.value })}
-                      style={{ flex: 1, padding: '0.6rem 0.85rem', borderRadius: '8px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: '#fff', fontSize: '0.85rem' }}
+                      style={{ flex: '1 1 200px', padding: '0.6rem 0.85rem', borderRadius: '8px', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', color: '#fff', fontSize: '0.85rem' }}
                     />
-                    <button
-                      onClick={() => handleDecision(req.id || req._id, "APPROVED")}
-                      disabled={resolvingId === (req.id || req._id)}
-                      className="btn-primary"
-                      style={{ background: 'var(--accent-success)', border: 'none', padding: '0.6rem 1.25rem' }}
-                    >
-                      <CheckCircle2 size={16} /> Approve & Execute
-                    </button>
-                    <button
-                      onClick={() => handleDecision(req.id || req._id, "REJECTED")}
-                      disabled={resolvingId === (req.id || req._id)}
-                      className="btn-danger"
-                      style={{ padding: '0.6rem 1.25rem' }}
-                    >
-                      <XCircle size={16} /> Reject
-                    </button>
+                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      <button
+                        onClick={() => handleDecision(req.id || req._id, "APPROVED")}
+                        disabled={resolvingId === (req.id || req._id)}
+                        className="btn-primary"
+                        style={{ background: 'var(--accent-success)', border: 'none', padding: '0.6rem 1rem' }}
+                      >
+                        <CheckCircle2 size={16} /> Approve & Execute
+                      </button>
+                      <button
+                        onClick={() => handleDecision(req.id || req._id, "REJECTED")}
+                        disabled={resolvingId === (req.id || req._id)}
+                        className="btn-danger"
+                        style={{ padding: '0.6rem 1rem' }}
+                      >
+                        <XCircle size={16} /> Reject
+                      </button>
+                    </div>
                   </div>
                 ) : (
                   <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>

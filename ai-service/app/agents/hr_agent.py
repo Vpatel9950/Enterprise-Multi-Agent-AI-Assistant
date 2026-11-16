@@ -32,6 +32,17 @@ Based on the **Enterprise HR & Benefits Directives (2026)**:
 - **401(k) Match**: Dollar-for-dollar match up to 6% of base salary.
 - **Open Enrollment**: Every October via Employee Benefits Hub.""",
 
+    "notice": """### 🏢 Enterprise HR & Workforce Advisory
+Based on the **Enterprise HR & Benefits Directives (2026)**:
+
+**Standard Notice Period & Separation Policy:**
+- **Software Engineers & Individual Contributors (IC)**: **30 days (1 month)** written notice submitted via HR Portal.
+- **Probationary Period (First 90 Days)**: **14 days (2 weeks)** notice by either party.
+- **Engineering Leads & Managers**: **60 days (2 months)** written notice for handover transition.
+- **Directors & Executive Leadership**: **90 days (3 months)** notice period.
+- **Offboarding Procedure**: Complete knowledge transfer documentation, return corporate assets (laptop, security key), and conduct HR exit interview before last working day.
+- **Notice Buyout**: Early release or buyout subject to Department Head and People Ops sign-off.""",
+
     "default": """### 🏢 Enterprise HR & Workforce Advisory
 **General Workforce Guidelines:**
 - **Hybrid Policy**: 3 days on-site, 2 days remote (manager approval).
@@ -50,7 +61,9 @@ class HRAgent:
         q_lower = query.lower()
 
         # Pick mock fallback based on keywords
-        if any(w in q_lower for w in ["pto", "leave", "vacation", "holiday", "time off"]):
+        if any(w in q_lower for w in ["notice", "resignation", "separation", "relieving", "probation"]):
+            fallback = MOCK_RESPONSES["notice"]
+        elif any(w in q_lower for w in ["pto", "leave", "vacation", "holiday", "time off"]):
             fallback = MOCK_RESPONSES["pto"]
         elif any(w in q_lower for w in ["parental", "maternity", "paternity"]):
             fallback = MOCK_RESPONSES["parental"]

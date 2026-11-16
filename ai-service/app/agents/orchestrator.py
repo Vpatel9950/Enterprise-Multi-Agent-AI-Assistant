@@ -77,7 +77,7 @@ Rules:
 
         if any(k in q for k in ["policy", "handbook", "document", "spec", "sla", "manual", "rule", "guideline"]):
             matched.append("rag_agent")
-        if any(k in q for k in ["pto", "leave", "vacation", "holiday", "benefit", "insurance", "401k", "maternity", "paternity", "onboarding", "hr"]):
+        if any(k in q for k in ["pto", "leave", "vacation", "holiday", "benefit", "insurance", "401k", "maternity", "paternity", "onboarding", "hr", "notice", "resignation", "separation", "probation", "employment", "contract", "salary", "payroll", "hiring", "joining"]):
             matched.append("hr_agent")
         if any(k in q for k in ["budget", "spend", "cost", "expense", "variance", "procure", "invoice", "finance", "revenue"]):
             matched.append("finance_agent")

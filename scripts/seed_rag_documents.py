@@ -93,6 +93,15 @@ All employees must complete annual Ethics & Compliance training by December 31.
 Conflicts of interest must be disclosed to HR within 30 days of occurrence.
 Zero tolerance policy for discrimination, harassment, or retaliation.
 Violations may result in immediate termination and legal action.
+
+SECTION 10: RESIGNATION, OFFBOARDING & NOTICE PERIOD
+Standard notice period for full-time Software Engineers and Individual Contributors (IC) is 30 calendar days (1 month).
+Employees undergoing initial 90-day probation have a 14-day notice period from either party.
+Engineering Leads, Managers, and Staff Engineers must serve a 60-day notice period to ensure transition continuity.
+Directors and Executive Leadership must provide a 90-day written notice.
+All resignations must be submitted formally through the HR Portal (hr.acme.com) and acknowledged by the direct manager.
+Mandatory knowledge transfer documentation, codebase handover, and surrender of company hardware/badges are required prior to final settlement.
+Notice buyout may be approved at the discretion of the Department Head and People Operations.
 """
 
 TECH_SLA_TEXT = """
